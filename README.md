@@ -37,12 +37,10 @@ cd librenms-axis-device
 sudo ./install.sh install
 ```
 
-Set the VAPIX credentials once (stored in the shared LibreNMS database):
+Set the VAPIX credentials once. They're stored in LibreNMS's shared database, so every poller sees them:
 
 ```bash
-cd /opt/librenms
-sudo -u librenms ./lnms config:set axis_device.username 'vapix-user'
-sudo -u librenms ./lnms config:set axis_device.password 'your-password'
+sudo ./install.sh credentials
 ```
 
 Add the app to your Axis devices (preview first):
@@ -92,6 +90,13 @@ Each install backs up the files it replaces to `/opt/librenms/axis-device-backup
 | `axis_device.snapshot` | `true` | Store a JPEG thumbnail each poll (in the database) |
 | `axis_device.snapshot_resolution` | `480x270` | Thumbnail size |
 | `axis_device.fw_folder_overrides` | `{}` | ftp.axis.com folder per model, e.g. `{"D2110-VE":"MPQT"}` |
+
+```bash
+sudo ./install.sh config                                   # show all settings
+sudo ./install.sh config snapshot false                    # change one
+sudo ./install.sh config fw_folder_overrides '{"XC1311":"PACS"}'
+sudo ./install.sh config snapshot --unset                  # back to default
+```
 
 AXIS OS download links assume models starting with A, C or I live under `pub_soft/PACS/` and everything else under `pub_soft/MPQT/`.
 

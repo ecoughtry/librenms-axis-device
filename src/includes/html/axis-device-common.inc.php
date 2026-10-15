@@ -133,7 +133,7 @@ if (! function_exists('axd_decode')) {
      * ftp.axis.com folder for a model.
      * Access control / door stations (A), audio & speakers (C) and intercoms (I) live under PACS,
      * everything else under MPQT. Per-model overrides:
-     *   lnms config:set axis_device.fw_folder_overrides '{"D2110-VE":"MPQT"}'
+     *   sudo ./install.sh config fw_folder_overrides '{"D2110-VE":"MPQT"}'
      */
     function axd_fw_folder(string $model): string
     {

@@ -7,7 +7,7 @@
  *
  * Install path: /opt/librenms/includes/polling/applications/axis-device.inc.php
  *
- * Config (config.php or `lnms config:set`):
+ * Settings (set with `install.sh credentials` / `install.sh config`):
  *   axis_device.username / axis_device.password   VAPIX account (digest or basic auth)
  *   axis_device.snapshot  (default: true)           store a small JPEG thumbnail each poll
  *   axis_device.snapshot_resolution (default: 480x270)

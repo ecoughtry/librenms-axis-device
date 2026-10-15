@@ -4,6 +4,8 @@
 #
 #   sudo ./install.sh install [--nodes "host1 host2"]   install/update files (this node, plus pollers/web nodes)
 #   sudo ./install.sh enable [--dry-run] [--where SQL]   add the app to Axis devices (run once, on any node)
+#   sudo ./install.sh credentials                       set the VAPIX username/password (run once, on any node)
+#   sudo ./install.sh config [key] [value|--unset]      show or change axis_device.* settings
 #   sudo ./install.sh status                            show installed version and device counts
 #   sudo ./install.sh uninstall [--purge] [--nodes "..."]
 #
@@ -128,6 +130,60 @@ cmd_enable() {
   ok "enabled on $n device(s); data appears after the next poll"
 }
 
+# --- settings (axis_device.*) live in LibreNMS's shared config table, so every node sees them ---
+sql_str() { printf "%s" "$1" | sed -e 's/\\/\\\\/g' -e "s/'/''/g"; }
+
+set_setting() { # $1 = key without prefix, $2 = value (JSON literals stored as-is, anything else as a string)
+  local key="axis_device.$1" val="$2" json
+  if [[ "$val" =~ ^(true|false|null|-?[0-9]+(\.[0-9]+)?)$ ]] || [[ "$val" =~ ^[\{\[] ]]; then
+    json="'$(sql_str "$val")'"
+  else
+    json="JSON_QUOTE('$(sql_str "$val")')"
+  fi
+  sql "INSERT INTO config (config_name, config_value) VALUES ('$(sql_str "$key")', $json) ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)"
+}
+
+clear_config_cache() {
+  as_lnms php "$LNMS/artisan" config:clear >/dev/null 2>&1 || true
+  ok "settings saved; pollers pick them up on their next poll"
+}
+
+cmd_credentials() {
+  need_root; need_lnms
+  say "VAPIX credentials (stored in the shared LibreNMS database)"
+  local cur user pass
+  cur="$(sql "SELECT JSON_UNQUOTE(config_value) FROM config WHERE config_name = 'axis_device.username'" || true)"
+  read -rp "    Username${cur:+ [$cur]}: " user; user="${user:-$cur}"
+  [ -n "$user" ] || die "username is required"
+  read -rsp "    Password: " pass; echo
+  [ -n "$pass" ] || die "password is required"
+  set_setting username "$user"
+  set_setting password "$pass"
+  clear_config_cache
+}
+
+cmd_config() {
+  need_root; need_lnms
+  local key="${ARGS[0]:-}" val="${ARGS[1]:-}"
+  if [ -z "$key" ]; then
+    say "axis_device settings"
+    sql "SELECT CONCAT('    ', config_name, ' = ', IF(config_name LIKE '%password%', '********', config_value)) FROM config WHERE config_name LIKE 'axis\\_device.%' ORDER BY config_name" || true
+    return
+  fi
+  key="${key#axis_device.}"
+  if [ "$val" = "--unset" ] || [ "${UNSET:-0}" = 1 ]; then
+    sql "DELETE FROM config WHERE config_name = 'axis_device.$(sql_str "$key")'"
+    ok "removed axis_device.$key"
+  elif [ -z "$val" ]; then
+    sql "SELECT IF(config_name LIKE '%password%', '********', config_value) FROM config WHERE config_name = 'axis_device.$(sql_str "$key")'" || true
+    return
+  else
+    set_setting "$key" "$val"
+    ok "axis_device.$key set"
+  fi
+  clear_config_cache
+}
+
 cmd_status() {
   need_lnms
   say "Axis Device app on $(hostname)"
@@ -158,21 +214,25 @@ cmd_uninstall() {
 
 # --- args ------------------------------------------------------------------
 CMD="${1:-}"; shift || true
-NODES=""; DRY_RUN=0; PURGE=0; WHERE=""
+NODES=""; DRY_RUN=0; PURGE=0; WHERE=""; UNSET=0; ARGS=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --nodes) NODES="$2"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     --purge) PURGE=1; shift ;;
     --where) WHERE="$2"; shift 2 ;;
-    *) die "unknown option $1" ;;
+    --unset) UNSET=1; shift ;;
+    --*) die "unknown option $1" ;;
+    *) ARGS+=("$1"); shift ;;
   esac
 done
 
 case "$CMD" in
   install) cmd_install ;;
   enable) cmd_enable ;;
+  credentials) cmd_credentials ;;
+  config) cmd_config ;;
   status) cmd_status ;;
   uninstall) cmd_uninstall ;;
-  *) sed -n '3,14p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+  *) sed -n '3,16p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
 esac
