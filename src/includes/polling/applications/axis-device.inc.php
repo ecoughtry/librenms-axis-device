@@ -590,7 +590,10 @@ if ($axd_status !== 'ok') {
     // =======================================================================
     // SLOW TIER: every 6 hours
     // =======================================================================
-    if ($axd_due('slow', 21600)) {
+    // Refresh the slow tier right away when AXIS OS changed since its status was last collected
+    $axd_fw_stale = ($axd_prev['Firmware']['active'] ?? '') !== '' && ($axd['Version'] ?? '') !== ''
+        && $axd_prev['Firmware']['active'] !== $axd['Version'];
+    if ($axd_due('slow', 21600) || $axd_fw_stale) {
         // --- Capabilities --------------------------------------------------
         [$pc, $pm] = axd_params($axd_ctx, 'root.Properties.Image,root.Properties.PTZ,root.Properties.Audio');
         if ($pc === 200 && $pm) {

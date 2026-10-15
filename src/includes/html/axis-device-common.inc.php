@@ -8,7 +8,7 @@ if (! function_exists('axd_decode')) {
     /** App version (also shown in the page footer). */
     function axd_version(): string
     {
-        return '1.0.1';
+        return '1.0.2';
     }
 
     /** Setting: axis_device.<key>. */
@@ -274,11 +274,12 @@ if (! function_exists('axd_decode')) {
         }
 
         // Firmware
-        $fw = (string) (($d['Firmware']['active'] ?? '') !== '' ? $d['Firmware']['active'] : ($d['Version'] ?? ''));
+        $fw = (string) (($d['Version'] ?? '') !== '' ? $d['Version'] : ($d['Firmware']['active'] ?? ''));
+        $fw_status_current = ($d['Firmware']['active'] ?? '') === $fw;
         if ($fw !== '') {
             $track = axd_fw_track($fw);
             $txt = 'AXIS OS ' . $fw . ($track ? " ({$track})" : '');
-            if (($d['Firmware']['committed'] ?? null) === false) {
+            if ($fw_status_current && ($d['Firmware']['committed'] ?? null) === false) {
                 $add('fw', 'warning', $txt . ' uncommitted', 'AXIS OS upgrade not committed; device may roll back on reboot');
             } elseif ($fleet_newest && version_compare($fw, $fleet_newest, '<')) {
                 $add('fw', 'warning', $txt . ' behind fleet', 'Newest AXIS OS for this model in fleet: ' . $fleet_newest);

@@ -378,13 +378,14 @@ foreach (($d['Ntp'] ?? []) as $k => $v) {
 $time_html = $time_rows ? $kv($time_rows) : $muted('Time information not available.');
 
 // AXIS OS with ftp.axis.com links
-$fw_ver = (string) (($d['Firmware']['active'] ?? '') !== '' ? $d['Firmware']['active'] : ($d['Version'] ?? ''));
+$fw_ver = (string) (($d['Version'] ?? '') !== '' ? $d['Version'] : ($d['Firmware']['active'] ?? ''));
 $fwi = axd_fw_info($model, $fw_ver);
 $fw_rows = [];
 $fw_rows['Installed'] = axd_h($fw_ver) . (($fwi['track'] ?? '') !== '' ? ' ' . $small('info', $fwi['track']) : '');
-if (isset($d['Firmware'])) {
+if (isset($d['Firmware']) && ($d['Firmware']['active'] ?? '') !== '' && $d['Firmware']['active'] !== $fw_ver) {
+    $fw_rows['Status'] = $muted('AXIS OS changed since the last status check; rollback and commit details refresh on the next poll.');
+} elseif (isset($d['Firmware'])) {
     $fw = $d['Firmware'];
-    $fw_rows['Active part'] = axd_h($fw['active_part'] ?? '');
     $fw_rows['Inactive (rollback)'] = axd_h($fw['inactive'] ?? '');
     $fw_rows['Committed'] = ($fw['committed'] ?? null) === null ? '' : $small($fw['committed'] ? 'success' : 'warning', $fw['committed'] ? 'yes' : 'no');
     $fw_rows['Last upgrade'] = axd_h($fw['last_upgrade'] ?? '');
