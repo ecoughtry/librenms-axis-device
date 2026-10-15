@@ -8,7 +8,7 @@ if (! function_exists('axd_decode')) {
     /** App version (also shown in the page footer). */
     function axd_version(): string
     {
-        return '1.0.2';
+        return '1.1.0';
     }
 
     /** Setting: axis_device.<key>. */
@@ -239,18 +239,19 @@ if (! function_exists('axd_decode')) {
             }
         }
 
-        // ACAPs
+        // ACAPs: a stopped app is only a problem if it was running recently
+        // (some ACAPs, e.g. privacy or analytics apps, are intentionally left stopped)
         if (isset($d['Acaps'])) {
             $tot = count($d['Acaps']);
-            $run = $stop = $bad = 0;
-            $stopped = [];
+            $run = $bad = 0;
+            $recent = $idle = [];
             foreach ($d['Acaps'] as $a) {
                 $s = strtolower($a['status'] ?? '');
+                $label = $a['nice'] ?? $a['name'] ?? '';
                 if ($s === 'running') {
                     $run++;
                 } elseif ($s === 'stopped') {
-                    $stop++;
-                    $stopped[] = $a['nice'] ?? $a['name'] ?? '';
+                    axd_acap_recently_stopped($d, $a['name'] ?? '') ? $recent[] = $label : $idle[] = $label;
                 }
                 if (in_array(strtolower($a['license'] ?? ''), ['invalid', 'expired', 'missing'], true)) {
                     $bad++;
@@ -259,9 +260,11 @@ if (! function_exists('axd_decode')) {
             if ($tot === 0) {
                 $add('acaps', 'default', 'No ACAPs');
             } else {
-                $add('acaps', ($stop || $bad) ? 'warning' : 'success',
-                    "ACAPs {$run}/{$tot} running" . ($bad ? ", {$bad} license issue" : ''),
-                    $stopped ? 'Stopped: ' . implode(', ', $stopped) : '');
+                $title = trim(($recent ? 'Stopped recently: ' . implode(', ', $recent) . '. ' : '')
+                    . ($idle ? 'Not running (not recently): ' . implode(', ', $idle) : ''));
+                $add('acaps', ($recent || $bad) ? 'warning' : 'success',
+                    "ACAPs {$run}/{$tot} running" . ($recent ? ', ' . count($recent) . ' stopped recently' : '') . ($bad ? ", {$bad} license issue" : ''),
+                    $title);
             }
         }
 
@@ -333,6 +336,20 @@ if (! function_exists('axd_decode')) {
         $add('clients', $n > 0 ? 'primary' : 'default', $n . ' client' . ($n === 1 ? '' : 's'));
 
         return $out;
+    }
+
+    /** Hours a "running -> stopped" ACAP keeps being flagged (setting: acap_stop_window_hours). */
+    function axd_acap_window(): int
+    {
+        return max(1, (int) axd_cfg('acap_stop_window_hours', 24)) * 3600;
+    }
+
+    /** True when the ACAP was seen running and stopped within the flag window. */
+    function axd_acap_recently_stopped(array $d, string $name): bool
+    {
+        $since = (int) ($d['AcapState'][$name]['stopped_since'] ?? 0);
+
+        return $since > 0 && (time() - $since) < axd_acap_window();
     }
 
     /** Worst level from axd_health() items. */

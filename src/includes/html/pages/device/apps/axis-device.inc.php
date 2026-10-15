@@ -346,7 +346,11 @@ if (isset($d['Acaps'])) {
             '<strong>' . axd_h($a['nice'] ?? '') . '</strong>' . (($a['name'] ?? '') !== ($a['nice'] ?? '') ? '<br><small class="text-muted">' . axd_h($a['name']) . '</small>' : ''),
             axd_h($a['vendor'] ?? ''),
             axd_h($a['version'] ?? ''),
-            $small($s === 'running' ? 'success' : ($s === 'stopped' ? 'warning' : 'default'), $a['status'] ?: 'unknown'),
+            $small($s === 'running' ? 'success' : ($s === 'stopped' && axd_acap_recently_stopped($d, $a['name'] ?? '') ? 'warning' : 'default'), $a['status'] ?: 'unknown')
+                . ($s === 'stopped' && ! empty($d['AcapState'][$a['name'] ?? '']['stopped_since'])
+                    ? ' <small class="text-muted">stopped ' . axd_h(axd_ago($d['AcapState'][$a['name']]['stopped_since'])) . '</small>'
+                    : ($s === 'stopped' && ! empty($d['AcapState'][$a['name'] ?? '']['last_running'])
+                        ? ' <small class="text-muted">last ran ' . axd_h(axd_ago($d['AcapState'][$a['name']]['last_running'])) . '</small>' : '')),
             $small($lcls, $a['license'] ?: 'n/a'),
         ];
     }

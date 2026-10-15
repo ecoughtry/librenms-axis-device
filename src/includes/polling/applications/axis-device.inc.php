@@ -431,6 +431,27 @@ if ($axd_status !== 'ok') {
         }
     }
 
+    // Track when each ACAP was last seen running. Some ACAPs are intentionally left stopped,
+    // so only an app that was running and then stopped gets flagged (see axd_health()).
+    if (isset($axd['Acaps'])) {
+        $prev_state = is_array($axd_prev['AcapState'] ?? null) ? $axd_prev['AcapState'] : [];
+        $settling = isset($axd['Uptime']) && (int) $axd['Uptime'] < 600; // apps may still be starting after a reboot
+        $state = [];
+        foreach ($axd['Acaps'] as $i => $a) {
+            $n = $a['name'];
+            $st = is_array($prev_state[$n] ?? null) ? $prev_state[$n] : [];
+            $s = strtolower($a['status']);
+            if ($s === 'running') {
+                $st['last_running'] = $axd_now;
+                unset($st['stopped_since']);
+            } elseif ($s === 'stopped' && ! empty($st['last_running']) && empty($st['stopped_since']) && ! $settling) {
+                $st['stopped_since'] = $axd_now;
+            }
+            $state[$n] = $st;
+        }
+        $axd['AcapState'] = $state;
+    }
+
     // --- Time & NTP --------------------------------------------------------
     $t = axd_json($axd_ctx, '/axis-cgi/time.cgi', 'getDateTimeInfo');
     if (is_array($t) && ! empty($t['dateTime'])) {
@@ -781,6 +802,7 @@ if ($axd_status === 'ok') {
         $metrics['acaps_total'] = count($axd['Acaps']);
         $metrics['acaps_running'] = count(array_keys($st, 'running'));
         $metrics['acaps_stopped'] = count(array_keys($st, 'stopped'));
+        $metrics['acaps_recently_stopped'] = count(array_filter($axd['AcapState'] ?? [], fn ($s) => ! empty($s['stopped_since']) && $axd_now - (int) $s['stopped_since'] < 86400));
         $metrics['acaps_license_bad'] = count(array_filter($lic, fn ($l) => in_array($l, ['invalid', 'expired', 'missing'], true)));
     }
     if (isset($axd['Time']['offset_s']) && $axd['Time']['offset_s'] !== null) {
@@ -898,7 +920,7 @@ if ($axd_prev) {
                     }
                     $ps = $pa['status'] ?? '';
                     if ($ps !== ($a['status'] ?? '')) {
-                        $sev = strtolower($a['status']) === 'running' ? 'ok' : (strtolower($a['status']) === 'stopped' ? 'warning' : 'info');
+                        $sev = strtolower($a['status']) === 'running' ? 'ok' : (strtolower($a['status']) === 'stopped' ? 'notice' : 'info');
                         $axd_ev("ACAP {$label}: {$ps} -> {$a['status']}", $sev);
                     }
                     if (strtolower($pa['license'] ?? '') !== strtolower($a['license'] ?? '')) {

@@ -21,7 +21,7 @@ Works with Axis cameras, intercoms, speakers, audio, sensors and access control 
 
 **Change events** written to the LibreNMS eventlog (device Logs tab): AXIS OS changes, ACAP installed/removed/started/stopped/updated/license, SD card inserted/removed/read-only/full, user accounts added/removed/role changed, MQTT connect/disconnect, clock drift, certificate replaced, network changes, VAPIX access lost/restored.
 
-**Metrics** in `application_metrics` for LibreNMS alert rules: `auth_ok`, `sd_ok`, `sd_used_pct`, `acaps_running`, `acaps_stopped`, `acaps_license_bad`, `time_offset_s`, `mqtt_connected`, `temp_cpu`, `syslog_errors_24h`, `cert_days_left`, `streams`, `clients`, `uptime`.
+**Metrics** in `application_metrics` for LibreNMS alert rules: `auth_ok`, `sd_ok`, `sd_used_pct`, `acaps_running`, `acaps_stopped`, `acaps_recently_stopped`, `acaps_license_bad`, `time_offset_s`, `mqtt_connected`, `temp_cpu`, `syslog_errors_24h`, `cert_days_left`, `streams`, `clients`, `uptime`.
 
 ## Requirements
 
@@ -90,6 +90,7 @@ Each install backs up the files it replaces to `/opt/librenms/axis-device-backup
 | `axis_device.snapshot` | `true` | Store a JPEG thumbnail each poll (in the database) |
 | `axis_device.snapshot_resolution` | `480x270` | Thumbnail size |
 | `axis_device.fw_folder_overrides` | `{}` | ftp.axis.com folder per model, e.g. `{"D2110-VE":"MPQT"}` |
+| `axis_device.acap_stop_window_hours` | `24` | How long an ACAP that stopped after running is flagged as a warning. ACAPs that are simply left stopped are never flagged |
 
 ```bash
 sudo ./install.sh config                                   # show all settings
