@@ -1,16 +1,14 @@
 # Changelog
 
-## 1.1.0 - 2026-10-14
+## 1.0.2 - 2026-10-14
+- AXIS OS version on the System tab and badges now comes from live data (every poll)
+- AXIS OS status (rollback, committed) refreshes immediately after an upgrade
+- Removed the "Active part" row
 - A stopped ACAP is only flagged when it was running and stopped recently (default 24 h,
   setting `acap_stop_window_hours`); ACAPs that are intentionally left stopped stay neutral
 - ACAP table shows when an app stopped or last ran
 - New metric `acaps_recently_stopped` for alert rules
 - "ACAP stopped" change events are logged as notices instead of warnings
-
-## 1.0.2 - 2026-10-14
-- AXIS OS version on the System tab and badges now comes from live data (every poll)
-- AXIS OS status (rollback, committed) refreshes immediately after an upgrade
-- Removed the "Active part" row
 
 ## 1.0.1 - 2026-10-14
 - Fix `install.sh status` summary query on MariaDB
