@@ -81,7 +81,7 @@ if ($model !== '') {
     try {
         $fleet = dbFetchRows(
             'SELECT JSON_UNQUOTE(JSON_EXTRACT(data, \'$.Version\')) AS v, COUNT(*) AS c FROM applications '
-            . 'WHERE app_type = \'axis-device\' AND JSON_VALID(data) AND JSON_UNQUOTE(JSON_EXTRACT(data, \'$.ProdShortName\')) = ? '
+            . 'WHERE app_type = \'axis-device\' AND deleted_at IS NULL AND JSON_VALID(data) AND JSON_UNQUOTE(JSON_EXTRACT(data, \'$.ProdShortName\')) = ? '
             . 'GROUP BY v ORDER BY c DESC',
             [$model]
         ) ?: [];

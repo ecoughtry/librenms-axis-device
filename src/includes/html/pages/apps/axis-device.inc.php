@@ -20,7 +20,7 @@ try {
         "SELECT a.app_id, d.device_id, d.hostname, d.sysName, d.poller_group, d.status AS dev_status, d.disabled, d.`ignore`,
                 CASE WHEN JSON_VALID(a.data) THEN JSON_REMOVE(a.data, '$.Snapshot', '$.Streams', '$.Apis', '$.StreamProfiles', '$.Syslog.last_errors', '$._base') END AS data
          FROM applications a JOIN devices d ON d.device_id = a.device_id
-         WHERE a.app_type = 'axis-device'"
+         WHERE a.app_type = 'axis-device' AND a.deleted_at IS NULL"
     ) ?: [];
 } catch (\Throwable $e) {
     echo '<div class="alert alert-danger">Could not load Axis devices: ' . axd_h($e->getMessage()) . '</div>';

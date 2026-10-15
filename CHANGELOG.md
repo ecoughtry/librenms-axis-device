@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.3 - 2026-10-15
+- Fleet overview, fleet AXIS OS counts and `install.sh status` ignore devices where the app has been removed
+
 ## 1.0.2 - 2026-10-14
 - AXIS OS version on the System tab and badges now comes from live data (every poll)
 - AXIS OS status (rollback, committed) refreshes immediately after an upgrade

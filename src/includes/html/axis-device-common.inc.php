@@ -8,7 +8,7 @@ if (! function_exists('axd_decode')) {
     /** App version (also shown in the page footer). */
     function axd_version(): string
     {
-        return '1.0.2';
+        return '1.0.3';
     }
 
     /** Setting: axis_device.<key>. */

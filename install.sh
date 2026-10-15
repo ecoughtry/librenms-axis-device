@@ -195,7 +195,7 @@ cmd_status() {
   local missing=0; for f in "${FILES[@]}"; do [ -f "$LNMS/$f" ] || { warn "missing $f"; missing=1; }; done
   [ $missing = 0 ] && ok "all ${#FILES[@]} files present"
   if [ "$(id -u)" -eq 0 ] && [ -r "$LNMS/.env" ]; then
-    sql "SELECT CONCAT('    ', s, ': ', n) FROM (SELECT COALESCE(JSON_UNQUOTE(JSON_EXTRACT(data,'$.VapixStatus')),'no data') AS s, COUNT(*) AS n FROM applications WHERE app_type = '$APP' GROUP BY s) t" || true
+    sql "SELECT CONCAT('    ', s, ': ', n) FROM (SELECT COALESCE(JSON_UNQUOTE(JSON_EXTRACT(data,'$.VapixStatus')),'no data') AS s, COUNT(*) AS n FROM applications WHERE app_type = '$APP' AND deleted_at IS NULL GROUP BY s) t" || true
   fi
 }
 
