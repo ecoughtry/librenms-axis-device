@@ -1,0 +1,3 @@
+*.tgz
+*.bak*
+.DS_Store
