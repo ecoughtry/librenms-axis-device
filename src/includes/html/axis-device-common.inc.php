@@ -261,7 +261,7 @@ if (! function_exists('axd_decode')) {
                 $add('acaps', 'default', 'No ACAPs');
             } else {
                 $title = trim(($recent ? 'Stopped recently: ' . implode(', ', $recent) . '. ' : '')
-                    . ($idle ? 'Not running (not recently): ' . implode(', ', $idle) : ''));
+                    . ($idle ? 'Not running: ' . implode(', ', $idle) : ''));
                 $add('acaps', ($recent || $bad) ? 'warning' : 'success',
                     "ACAPs {$run}/{$tot} running" . ($recent ? ', ' . count($recent) . ' stopped recently' : '') . ($bad ? ", {$bad} license issue" : ''),
                     $title);
