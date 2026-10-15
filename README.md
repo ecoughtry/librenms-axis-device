@@ -131,3 +131,7 @@ These are untracked files inside the LibreNMS tree, so LibreNMS's own `git pull`
 sudo ./install.sh uninstall --nodes "..."          # remove files
 sudo ./install.sh uninstall --purge --nodes "..."  # also remove the app from all devices
 ```
+
+## License
+
+GPL-3.0-or-later. See [LICENSE](LICENSE).
