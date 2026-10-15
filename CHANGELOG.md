@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.1 - 2026-10-14
+- Fix `install.sh status` summary query on MariaDB
+
 ## 1.0.0 - 2026-10-14
 Initial release.
 - Tabbed device page: Overview, Video, Storage & ACAPs, System, History, APIs
